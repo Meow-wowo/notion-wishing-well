@@ -341,6 +341,7 @@
     let activeFilter = 'ALL';
     let selectedCategory = '獎勵';
     let isTeacherAuthenticated = false;
+    let pendingDeleteId = null; // 用於平滑兩階段點擊刪除，不調用原生 confirm()
 
     const defaultMockWishes = [
       {
@@ -589,6 +590,7 @@
         const dateStr = formatDate(wish.createdAt);
         const categoryBadge = getCategoryBadgeHTML(wish.category);
         const cardBgStyle = getMacaronCardBg(wish.category);
+        const isPending = pendingDeleteId === wish.id;
 
         return `
           <div class="${cardBgStyle} rounded-3xl p-4.5 macaron-shadow border border-white/80 dark:border-slate-700/80 hover:scale-[1.01] transition-all flex flex-col gap-2.5 relative">
@@ -621,8 +623,12 @@
 
               <div class="flex items-center gap-2">
                 ${isTeacherAuthenticated ? `
-                  <button onclick="deleteWish('${wish.id}')" class="text-[11px] text-rose-400 hover:text-rose-600 font-bold px-2 py-0.5 rounded-full bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 transition-colors">
-                    <i class="fa-solid fa-trash-can"></i> 刪除
+                  <button onclick="handleDeleteClick('${wish.id}')" class="text-[11px] font-bold px-2 py-0.5 rounded-full transition-all ${
+                    isPending 
+                      ? 'bg-rose-500 text-white animate-pulse' 
+                      : 'text-rose-400 hover:text-rose-600 bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800'
+                  }">
+                    <i class="fa-solid fa-trash-can"></i> ${isPending ? '確定刪除？' : '刪除'}
                   </button>
                 ` : ''}
                 <button onclick="toggleLike('${wish.id}')" 
@@ -759,13 +765,29 @@
       }
     }
 
-    function deleteWish(id) {
-      if (!confirm('確定要刪除這筆許願紀錄嗎？')) return;
-      wishes = wishes.filter(w => w.id !== id);
-      saveData();
-      renderWishes();
-      renderWhisperList();
-      showToast('已成功刪除該筆許願！', 'info');
+    // 兩階段無彈窗安全刪除
+    function handleDeleteClick(id) {
+      if (pendingDeleteId === id) {
+        // 第二次點擊：直接刪除
+        wishes = wishes.filter(w => w.id !== id);
+        pendingDeleteId = null;
+        saveData();
+        renderWishes();
+        renderWhisperList();
+        showToast('已成功刪除該筆許願！', 'info');
+      } else {
+        // 第一次點擊：啟用確認按鈕，3秒後未點擊自動重置
+        pendingDeleteId = id;
+        renderWishes();
+        renderWhisperList();
+        setTimeout(() => {
+          if (pendingDeleteId === id) {
+            pendingDeleteId = null;
+            renderWishes();
+            renderWhisperList();
+          }
+        }, 3000);
+      }
     }
 
     function renderWhisperList() {
@@ -782,33 +804,40 @@
         return;
       }
 
-      container.innerHTML = whispers.map(w => `
-        <div class="bg-purple-50 dark:bg-slate-900 p-3.5 rounded-2xl border border-purple-100 dark:border-purple-900 text-xs flex flex-col gap-2 relative">
-          <div class="flex justify-between items-center text-[11px]">
-            <span class="font-bold text-purple-700 dark:text-purple-300 flex items-center gap-1">
-              <i class="fa-solid fa-user-secret text-purple-400"></i>
-              ${escapeHTML(w.name)} ${w.isAnonymous ? '(匿名)' : ''}
-            </span>
-            <span class="text-slate-400">${formatDate(w.createdAt)}</span>
-          </div>
+      container.innerHTML = whispers.map(w => {
+        const isPending = pendingDeleteId === w.id;
+        return `
+          <div class="bg-purple-50 dark:bg-slate-900 p-3.5 rounded-2xl border border-purple-100 dark:border-purple-900 text-xs flex flex-col gap-2 relative">
+            <div class="flex justify-between items-center text-[11px]">
+              <span class="font-bold text-purple-700 dark:text-purple-300 flex items-center gap-1">
+                <i class="fa-solid fa-user-secret text-purple-400"></i>
+                ${escapeHTML(w.name)} ${w.isAnonymous ? '(匿名)' : ''}
+              </span>
+              <span class="text-slate-400">${formatDate(w.createdAt)}</span>
+            </div>
 
-          <div class="bg-white/90 dark:bg-slate-800 p-2 rounded-xl text-slate-600 dark:text-slate-300 border border-purple-100 dark:border-slate-800">
-            <span class="text-[10px] text-purple-400 font-bold block mb-0.5">公開許願內容：</span>
-            ${escapeHTML(w.content)}
-          </div>
+            <div class="bg-white/90 dark:bg-slate-800 p-2 rounded-xl text-slate-600 dark:text-slate-300 border border-purple-100 dark:border-slate-800">
+              <span class="text-[10px] text-purple-400 font-bold block mb-0.5">公開許願內容：</span>
+              ${escapeHTML(w.content)}
+            </div>
 
-          <div class="text-purple-900 dark:text-purple-200 font-medium bg-purple-100/50 dark:bg-purple-900/40 p-2.5 rounded-xl border border-purple-200/60 dark:border-purple-800">
-            <span class="text-[10px] text-purple-500 dark:text-purple-400 font-bold block mb-0.5">🤫 悄悄話：</span>
-            ${escapeHTML(w.whisper)}
-          </div>
+            <div class="text-purple-900 dark:text-purple-200 font-medium bg-purple-100/50 dark:bg-purple-900/40 p-2.5 rounded-xl border border-purple-200/60 dark:border-purple-800">
+              <span class="text-[10px] text-purple-500 dark:text-purple-400 font-bold block mb-0.5">🤫 悄悄話：</span>
+              ${escapeHTML(w.whisper)}
+            </div>
 
-          <div class="flex justify-end pt-1">
-            <button onclick="deleteWish('${w.id}')" class="text-[11px] text-rose-400 hover:text-rose-600 font-bold flex items-center gap-1">
-              <i class="fa-solid fa-trash-can"></i> 刪除卡片
-            </button>
+            <div class="flex justify-end pt-1">
+              <button onclick="handleDeleteClick('${w.id}')" class="text-[11px] font-bold px-2 py-1 rounded-lg transition-all ${
+                isPending 
+                  ? 'bg-rose-500 text-white animate-pulse' 
+                  : 'text-rose-400 hover:text-rose-600'
+              }">
+                <i class="fa-solid fa-trash-can"></i> ${isPending ? '確定刪除卡片？' : '刪除卡片'}
+              </button>
+            </div>
           </div>
-        </div>
-      `).join('');
+        `;
+      }).join('');
     }
 
     function showToast(message, type = 'info') {
