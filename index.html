@@ -3,859 +3,439 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>班級許願池 Wishing Well</title>
-  <!-- Tailwind CSS CDN -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  <!-- FontAwesome Icons -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <!-- Google Fonts: Noto Sans TC & Fredoka -->
-  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
-
-  <script>
-    tailwind.config = {
-      darkMode: 'class',
-      theme: {
-        extend: {
-          colors: {
-            macaron: {
-              pink: '#ffb7c5',
-              pinkLight: '#fff0f3',
-              mint: '#b7e4c7',
-              mintLight: '#e8f5e9',
-              blue: '#a2d2ff',
-              blueLight: '#edf6ff',
-              purple: '#cdb4db',
-              purpleLight: '#f3e8ff',
-              peach: '#ffcad4',
-              yellow: '#ffedd8',
-              gold: '#f6bd60',
-              cream: '#faf0ca'
-            }
-          },
-          fontFamily: {
-            sans: ['Noto Sans TC', 'Fredoka', 'sans-serif'],
-          }
-        }
-      }
-    }
-  </script>
-
+  <title>班級許願池</title>
   <style>
-    /* Custom Macaron Scrollbar */
-    ::-webkit-scrollbar {
-      width: 6px;
-      height: 6px;
+    :root {
+      --bg-color: #f7f9fc;
+      --card-reward: #fff0f5;
+      --card-bonus: #e6f7ff;
+      --card-penalty: #fffbe6;
+      --primary-blue: #4a90e2;
+      --primary-blue-hover: #357abd;
+      --text-color: #333333;
+      --text-muted: #666666;
+      --shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+      --radius: 16px;
     }
-    ::-webkit-scrollbar-track {
-      background: rgba(255, 255, 255, 0.4);
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+
+    body {
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      padding: 20px;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    h1 {
+      font-size: 1.8rem;
+      color: #2c3e50;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .teacher-zone-btn {
+      background: #722ed1;
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 20px;
+      cursor: pointer;
+      font-weight: bold;
+      transition: all 0.2s;
+    }
+
+    .teacher-zone-btn:hover {
+      background: #531dab;
+    }
+
+    .form-container {
+      background: white;
+      padding: 20px;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      margin-bottom: 24px;
+    }
+
+    .form-group {
+      margin-bottom: 12px;
+    }
+
+    label {
+      display: block;
+      font-weight: bold;
+      margin-bottom: 6px;
+      font-size: 0.95rem;
+    }
+
+    input[type="text"], textarea, select {
+      width: 100%;
+      padding: 10px 14px;
+      border: 1.5px solid #d9d9d9;
       border-radius: 8px;
-    }
-    ::-webkit-scrollbar-thumb {
-      background: #cdb4db;
-      border-radius: 8px;
-    }
-    ::-webkit-scrollbar-thumb:hover {
-      background: #b7e4c7;
+      font-size: 0.95rem;
+      outline: none;
+      transition: border-color 0.2s;
     }
 
-    /* Wishing Well Visual Effects - Macaron Theme */
-    .well-container {
-      perspective: 1000px;
-      background: linear-gradient(135deg, #a2d2ff 0%, #b7e4c7 50%, #ffcad4 100%);
+    input[type="text"]:focus, textarea:focus, select:focus {
+      border-color: var(--primary-blue);
     }
 
-    .water-ripple {
-      position: absolute;
-      border-radius: 50%;
-      border: 2px solid rgba(255, 255, 255, 0.9);
-      animation: ripple 2s infinite linear;
-      pointer-events: none;
+    .checkbox-group {
+      display: flex;
+      gap: 16px;
+      margin-top: 8px;
+      font-size: 0.9rem;
     }
 
-    @keyframes ripple {
-      0% {
-        width: 20px;
-        height: 10px;
-        opacity: 1;
-        transform: translate(-50%, -50%) scale(0.5);
-      }
-      100% {
-        width: 280px;
-        height: 140px;
-        opacity: 0;
-        transform: translate(-50%, -50%) scale(1.5);
-      }
+    .coin-btn {
+      width: 100%;
+      background-color: var(--primary-blue);
+      color: white;
+      border: none;
+      padding: 12px;
+      border-radius: 25px;
+      font-size: 1rem;
+      font-weight: bold;
+      cursor: pointer;
+      box-shadow: 0 4px 6px rgba(74, 144, 226, 0.3);
+      transition: all 0.2s;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 8px;
+      margin-top: 10px;
     }
 
-    /* Animated Coin Drop */
-    @keyframes dropCoin {
-      0% {
-        transform: translateY(-200px) scale(1.5) rotateY(0deg);
-        opacity: 0;
-      }
-      20% {
-        opacity: 1;
-      }
-      70% {
-        transform: translateY(80px) scale(0.8) rotateY(720deg);
-        opacity: 1;
-      }
-      85% {
-        transform: translateY(110px) scale(0.4) rotateY(900deg);
-        opacity: 0.8;
-      }
-      100% {
-        transform: translateY(120px) scale(0.1) rotateY(1080deg);
-        opacity: 0;
-      }
+    .coin-btn:hover {
+      background-color: var(--primary-blue-hover);
+      transform: translateY(-2px);
     }
 
-    .dropping-coin {
-      animation: dropCoin 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+    .filters {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
     }
 
-    /* Floating Animations */
-    @keyframes floatSlow {
-      0%, 100% { transform: translateY(0px) rotate(0deg); }
-      50% { transform: translateY(-8px) rotate(3deg); }
-    }
-    .animate-float {
-      animation: floatSlow 4s ease-in-out infinite;
+    .filter-btn {
+      padding: 8px 16px;
+      border: 1px solid #d9d9d9;
+      border-radius: 20px;
+      background: white;
+      cursor: pointer;
+      font-size: 0.9rem;
+      transition: all 0.2s;
     }
 
-    .macaron-shadow {
-      box-shadow: 0 10px 25px -5px rgba(205, 180, 219, 0.35);
+    .filter-btn.active {
+      background: var(--primary-blue);
+      color: white;
+      border-color: var(--primary-blue);
+    }
+
+    .wishes-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 16px;
+    }
+
+    .wish-card {
+      padding: 16px;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      position: relative;
+    }
+
+    .wish-card.reward { background-color: var(--card-reward); }
+    .wish-card.bonus { background-color: var(--card-bonus); }
+    .wish-card.penalty { background-color: var(--card-penalty); }
+
+    .tag {
+      display: inline-block;
+      padding: 4px 8px;
+      border-radius: 12px;
+      font-size: 0.75rem;
+      font-weight: bold;
+      background: rgba(255, 255, 255, 0.7);
+      margin-bottom: 8px;
+      width: fit-content;
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    .delete-btn {
+      background: #ff4d4f;
+      color: white;
+      border: none;
+      padding: 4px 8px;
+      border-radius: 6px;
+      font-size: 0.8rem;
+      cursor: pointer;
+    }
+
+    .wish-title {
+      font-weight: bold;
+      font-size: 1.1rem;
+      margin-bottom: 6px;
+    }
+
+    .wish-content {
+      font-size: 0.95rem;
+      color: #555;
+      margin-bottom: 12px;
+      white-space: pre-wrap;
+    }
+
+    .card-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      border-top: 1px dashed rgba(0, 0, 0, 0.1);
+      padding-top: 8px;
+    }
+
+    .like-btn {
+      background: white;
+      border: 1px solid #ffd6e7;
+      padding: 4px 10px;
+      border-radius: 15px;
+      color: #ff4d4f;
+      cursor: pointer;
+      font-weight: bold;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .secret-badge {
+      background: #722ed1;
+      color: white;
+      font-size: 0.7rem;
+      padding: 2px 6px;
+      border-radius: 4px;
     }
   </style>
 </head>
+<body>
 
-<body class="bg-gradient-to-br from-pink-50 via-purple-50 to-emerald-50 dark:from-slate-900 dark:via-purple-950 dark:to-slate-900 text-slate-700 dark:text-slate-100 font-sans transition-colors duration-300 min-h-screen flex flex-col p-2 sm:p-4 selection:bg-pink-200">
-
-  <!-- Header Navigation & Controls -->
-  <header class="max-w-4xl mx-auto w-full flex items-center justify-between py-3 px-4 mb-4 bg-white/80 dark:bg-slate-800/80 backdrop-blur-md rounded-2xl macaron-shadow border border-pink-100 dark:border-slate-700 sticky top-2 z-30">
-    <div class="flex items-center gap-3">
-      <div class="w-10 h-10 rounded-2xl bg-amber-300 dark:bg-amber-400 flex items-center justify-center text-amber-800 shadow-md shadow-amber-200 dark:shadow-none animate-float">
-        <i class="fa-solid font-bold fa-coins text-lg"></i>
-      </div>
-      <div>
-        <h1 class="text-lg font-extrabold text-pink-500 dark:text-pink-300">
-          班級馬卡龍許願池
-        </h1>
-        <p class="text-xs text-slate-400 dark:text-slate-400">投下甜甜的金幣，分享你的甜美期盼</p>
-      </div>
-    </div>
-
-    <!-- Right Controls -->
-    <div class="flex items-center gap-2">
-      <!-- Dark Mode Toggle -->
-      <button onclick="toggleDarkMode()" class="p-2 rounded-xl bg-purple-50 dark:bg-slate-700 hover:bg-pink-100 text-purple-400 dark:text-purple-300 transition-colors" title="切換深色模式">
-        <i class="fa-solid fa-moon dark:hidden text-base"></i>
-        <i class="fa-solid fa-sun hidden dark:inline text-base text-amber-300"></i>
-      </button>
-
-      <!-- Teacher Admin Button -->
-      <button onclick="openTeacherModal()" class="flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold rounded-xl bg-purple-200 hover:bg-purple-300 dark:bg-purple-900 dark:hover:bg-purple-800 text-purple-800 dark:text-purple-200 transition-all shadow-sm">
-        <i class="fa-solid fa-user-shield text-xs"></i>
-        <span>老師專區</span>
-        <span id="whisperBadge" class="hidden ml-1 px-1.5 py-0.2 bg-rose-400 text-white rounded-full text-[10px] font-bold">0</span>
-      </button>
-    </div>
+  <header>
+    <h1>🪙 班級許願池</h1>
+    <button class="teacher-zone-btn" onclick="toggleTeacherMode()">🔒 老師專區</button>
   </header>
 
-  <!-- Main Content Layout -->
-  <main class="max-w-4xl mx-auto w-full grid grid-cols-1 md:grid-cols-12 gap-5 flex-1">
-    
-    <!-- LEFT SIDE: Wish Form & Animated Well (5 cols) -->
-    <section class="md:col-span-5 flex flex-col gap-4">
-      
-      <!-- Interactive Macaron Wishing Well Visual Box -->
-      <div class="relative rounded-3xl p-4 macaron-shadow overflow-hidden border border-white/60 dark:border-slate-700 flex flex-col items-center justify-center min-h-[190px] well-container">
-        
-        <!-- Ripple Effect Center -->
-        <div class="absolute inset-0 flex items-center justify-center pointer-events-none opacity-60">
-          <div class="w-48 h-24 rounded-[100%] border-4 border-white/70 bg-white/20 relative flex items-center justify-center">
-            <div class="water-ripple" style="animation-delay: 0s;"></div>
-            <div class="water-ripple" style="animation-delay: 0.7s;"></div>
-            <div class="water-ripple" style="animation-delay: 1.4s;"></div>
-          </div>
-        </div>
-
-        <!-- Flying/Dropping Coin Placeholder -->
-        <div id="animatedCoinContainer" class="absolute inset-0 pointer-events-none flex items-center justify-center z-20"></div>
-
-        <!-- Well Icon & Title Graphic -->
-        <div class="relative z-10 text-center flex flex-col items-center pointer-events-none">
-          <div class="w-16 h-16 rounded-full bg-white/80 dark:bg-slate-800/90 border-2 border-white shadow-md flex items-center justify-center mb-2">
-            <i class="fa-solid fa-water text-teal-400 text-2xl"></i>
-          </div>
-          <span class="text-xs text-slate-700 font-bold tracking-wide bg-white/60 dark:bg-slate-800/60 px-3 py-1 rounded-full backdrop-blur-xs">馬卡龍水波盪漾...</span>
-          <p class="text-[11px] text-slate-600 dark:text-slate-300 mt-1 font-medium">投入許願金幣，點亮願望！</p>
-        </div>
-
-        <!-- Total Stats Counter -->
-        <div class="absolute bottom-3 right-3 z-10 bg-white/80 dark:bg-slate-800/80 backdrop-blur-md px-3 py-1 rounded-full border border-white text-[10px] text-purple-600 dark:text-purple-300 font-bold flex items-center gap-1.5 shadow-xs">
-          <i class="fa-solid fa-coins text-amber-400"></i>
-          <span>池中共有 <strong id="totalWishesCount">0</strong> 枚許願硬幣</span>
-        </div>
-      </div>
-
-      <!-- Wish Submission Form -->
-      <div class="bg-white/90 dark:bg-slate-800/90 rounded-3xl p-5 macaron-shadow border border-pink-100 dark:border-slate-700 flex flex-col gap-3.5">
-        <h2 class="text-sm font-bold text-slate-700 dark:text-slate-200 flex items-center gap-2">
-          <i class="fa-solid fa-wand-magic-sparkles text-pink-400"></i>
-          撰寫馬卡龍許願單
-        </h2>
-
-        <form id="wishForm" onsubmit="handleWishSubmit(event)" class="space-y-3">
-          
-          <!-- Category Selector Tabs -->
-          <div>
-            <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1.5">許願類別 <span class="text-rose-400">*</span></label>
-            <div class="grid grid-cols-3 gap-1.5 p-1 bg-pink-50/60 dark:bg-slate-900 rounded-2xl text-xs font-semibold">
-              <button type="button" onclick="selectCategory('獎勵')" id="catBtn-獎勵" class="cat-btn py-2 rounded-xl transition-all text-center">
-                🎁 獎勵
-              </button>
-              <button type="button" onclick="selectCategory('加分制度')" id="catBtn-加分制度" class="cat-btn py-2 rounded-xl transition-all text-center">
-                ⭐ 加分
-              </button>
-              <button type="button" onclick="selectCategory('扣分制度')" id="catBtn-扣分制度" class="cat-btn py-2 rounded-xl transition-all text-center">
-                ⚖️ 扣分
-              </button>
-            </div>
-            <input type="hidden" id="wishCategory" value="獎勵" required>
-          </div>
-
-          <!-- Name & Anonymous Row -->
-          <div>
-            <div class="flex justify-between items-center mb-1">
-              <label for="studentName" class="text-xs font-semibold text-slate-500 dark:text-slate-400">你的暱稱 / 姓名</label>
-              <label class="inline-flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400 cursor-pointer select-none">
-                <input type="checkbox" id="isAnonymous" onchange="toggleAnonymousUI()" class="rounded-lg border-pink-200 text-pink-400 focus:ring-pink-300 h-4 w-4">
-                <span>匿名提交</span>
-              </label>
-            </div>
-            <input type="text" id="studentName" placeholder="請輸入姓名 (勾選匿名將自動隱藏)" required
-              class="w-full text-xs px-3.5 py-2.5 rounded-xl border border-pink-100 dark:border-slate-700 bg-pink-50/30 dark:bg-slate-900 focus:ring-2 focus:ring-pink-300 focus:outline-none transition-all">
-          </div>
-
-          <!-- Wish Content Area -->
-          <div>
-            <label for="wishContent" class="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1">許願內容 / 建議制度 <span class="text-rose-400">*</span></label>
-            <textarea id="wishContent" rows="3" required placeholder="例如：希望能新增『連續全勤獎』可以換一張免寫作業券..." 
-              class="w-full text-xs px-3.5 py-2.5 rounded-xl border border-pink-100 dark:border-slate-700 bg-pink-50/30 dark:bg-slate-900 focus:ring-2 focus:ring-pink-300 focus:outline-none transition-all resize-none"></textarea>
-          </div>
-
-          <!-- Teacher Whisper Section (Secret Message) -->
-          <div class="p-3 rounded-2xl bg-purple-50/80 dark:bg-purple-950/40 border border-purple-100 dark:border-purple-800 space-y-1.5">
-            <div class="flex items-center gap-1.5 text-xs font-bold text-purple-600 dark:text-purple-300">
-              <i class="fa-solid fa-user-secret text-purple-400"></i>
-              <span>給老師的悄悄話</span>
-              <span class="text-[10px] font-normal text-purple-400">(只有老師看得見)</span>
-            </div>
-            <input type="text" id="whisperNote" placeholder="有什麼不敢公開講的話？寫在這裡吧..." 
-              class="w-full text-xs px-3 py-2 rounded-xl border border-purple-200 dark:border-purple-800 bg-white dark:bg-slate-900 focus:ring-2 focus:ring-purple-300 focus:outline-none transition-all">
-          </div>
-
-          <!-- Submit Coin Button -->
-          <button type="submit" id="submitBtn" class="w-full py-3 px-4 rounded-2xl bg-sky-300 hover:bg-sky-400 active:bg-sky-500 text-slate-800 font-extrabold text-xs shadow-md shadow-sky-100 dark:shadow-none hover:scale-[1.01] active:scale-[0.98] transition-all flex items-center justify-center gap-2 cursor-pointer border border-sky-200 dark:border-sky-700">
-            <i class="fa-solid fa-coins text-amber-400"></i>
-            <span>投入金幣 (送出)</span>
-          </button>
-        </form>
-
-      </div>
-    </section>
-
-    <!-- RIGHT SIDE: Wishing Board / Public Square (7 cols) -->
-    <section class="md:col-span-7 flex flex-col gap-3">
-      
-      <!-- Board Header Filter Bar -->
-      <div class="bg-white/90 dark:bg-slate-800/90 p-3 rounded-2xl macaron-shadow border border-pink-100 dark:border-slate-700 flex flex-wrap items-center justify-between gap-2">
-        
-        <!-- Filter Tabs -->
-        <div class="flex items-center gap-1 bg-pink-50/60 dark:bg-slate-900 p-1 rounded-xl text-xs font-semibold">
-          <button onclick="setFilter('ALL')" id="filterBtn-ALL" class="filter-btn px-3 py-1.5 rounded-lg transition-all">全部</button>
-          <button onclick="setFilter('獎勵')" id="filterBtn-獎勵" class="filter-btn px-3 py-1.5 rounded-lg transition-all">🎁 獎勵</button>
-          <button onclick="setFilter('加分制度')" id="filterBtn-加分制度" class="filter-btn px-3 py-1.5 rounded-lg transition-all">⭐ 加分</button>
-          <button onclick="setFilter('扣分制度')" id="filterBtn-扣分制度" class="filter-btn px-3 py-1.5 rounded-lg transition-all">⚖️ 扣分</button>
-        </div>
-
-        <!-- Sort Toggle -->
-        <div class="flex items-center gap-1 text-xs">
-          <select id="sortBy" onchange="renderWishes()" class="bg-pink-50/60 dark:bg-slate-900 border-none rounded-xl px-3 py-1.5 text-xs focus:ring-2 focus:ring-pink-300 font-semibold text-slate-600 dark:text-slate-300">
-            <option value="newest">🕒 最新許願</option>
-            <option value="mostLiked">❤️ 最高愛心</option>
-          </select>
-        </div>
-
-      </div>
-
-      <!-- Public Wishes Cards Feed Container -->
-      <div id="wishesFeed" class="space-y-3.5 max-h-[620px] overflow-y-auto pr-1">
-        <!-- Wish Cards Render Dynamic Here -->
-      </div>
-
-    </section>
-  </main>
-
-  <!-- TEACHER ADMIN MODAL -->
-  <div id="teacherModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-3 hidden">
-    <div class="bg-white dark:bg-slate-800 rounded-3xl max-w-lg w-full p-6 macaron-shadow border border-pink-100 dark:border-slate-700 flex flex-col max-h-[85vh]">
-      
-      <!-- Modal Header -->
-      <div class="flex items-center justify-between pb-3 border-b border-pink-100 dark:border-slate-700">
-        <div class="flex items-center gap-2 text-purple-600 dark:text-purple-300 font-extrabold">
-          <i class="fa-solid fa-user-shield text-lg"></i>
-          <span class="text-base">老師專屬悄悄話專區</span>
-        </div>
-        <button onclick="closeTeacherModal()" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1">
-          <i class="fa-solid fa-xmark text-lg"></i>
-        </button>
-      </div>
-
-      <!-- Passcode Auth Screen -->
-      <div id="teacherAuthBox" class="py-8 flex flex-col items-center text-center space-y-3">
-        <div class="w-14 h-14 rounded-full bg-purple-100 dark:bg-purple-900/50 flex items-center justify-center text-purple-500">
-          <i class="fa-solid fa-lock text-2xl"></i>
-        </div>
-        <div>
-          <h3 class="text-sm font-bold text-slate-700 dark:text-slate-200">請輸入解鎖密碼</h3>
-          <p class="text-xs text-slate-400 mt-0.5">預設密碼為：<span class="font-mono font-bold text-purple-500">teacher</span></p>
-        </div>
-        <div class="flex gap-2 w-full max-w-xs">
-          <input type="password" id="passcodeInput" placeholder="密碼" onkeypress="if(event.key==='Enter') verifyPasscode()"
-            class="flex-1 text-xs px-3.5 py-2.5 rounded-xl border border-purple-200 dark:border-slate-600 dark:bg-slate-900 focus:ring-2 focus:ring-purple-300 focus:outline-none">
-          <button onclick="verifyPasscode()" class="px-4 py-2.5 bg-purple-400 hover:bg-purple-500 text-white text-xs font-bold rounded-xl transition-colors">
-            驗證
-          </button>
-        </div>
-        <p id="authErrorMsg" class="text-xs text-rose-400 hidden font-semibold">密碼錯誤，請再試一次！</p>
-      </div>
-
-      <!-- Whisper List Content -->
-      <div id="teacherContentBox" class="hidden flex-1 flex flex-col pt-3 overflow-hidden">
-        <div class="flex items-center justify-between text-xs text-slate-400 mb-2">
-          <span>私密留言列表 (僅老師可見)</span>
-          <button onclick="lockTeacherMode()" class="text-xs text-rose-400 hover:underline"><i class="fa-solid fa-lock text-[10px]"></i> 登出鎖定</button>
-        </div>
-
-        <div id="whisperCardsContainer" class="flex-1 overflow-y-auto space-y-3 pr-1">
-          <!-- Whisper items inserted dynamically -->
-        </div>
-      </div>
-
+  <!-- 許願表單 -->
+  <div class="form-container">
+    <div class="form-group">
+      <label for="category">選擇類別</label>
+      <select id="category">
+        <option value="reward">🎁 獎勵制度</option>
+        <option value="bonus">⭐ 加分制度</option>
+        <option value="penalty">⚠️ 扣分制度</option>
+      </select>
     </div>
+    
+    <div class="form-group">
+      <label for="title">許願主題</label>
+      <input type="text" id="title" placeholder="例如：集滿10點換免作業卡、期中考進步獎...">
+    </div>
+
+    <div class="form-group">
+      <label for="content">詳細內容 / 想對老師說的話</label>
+      <textarea id="content" rows="3" placeholder="寫下你的想法或建議..."></textarea>
+    </div>
+
+    <div class="form-group checkbox-group">
+      <label><input type="checkbox" id="isAnonymous"> 匿名發布</label>
+      <label><input type="checkbox" id="isSecret"> 給老師的悄悄話（僅老師可見）</label>
+    </div>
+
+    <button class="coin-btn" onclick="addWish()">
+      🪙 投幣許願
+    </button>
   </div>
 
-  <!-- TOAST NOTIFICATION CONTAINER -->
-  <div id="toastContainer" class="fixed bottom-4 right-4 z-50 flex flex-col gap-2 pointer-events-none"></div>
+  <!-- 分類篩選 -->
+  <div class="filters">
+    <button class="filter-btn active" onclick="filterWishes('all')">全部</button>
+    <button class="filter-btn" onclick="filterWishes('reward')">🎁 獎勵</button>
+    <button class="filter-btn" onclick="filterWishes('bonus')">⭐ 加分</button>
+    <button class="filter-btn" onclick="filterWishes('penalty')">⚠️ 扣分</button>
+  </div>
 
-  <!-- JAVASCRIPT LOGIC -->
+  <!-- 願望卡片展示區 -->
+  <div class="wishes-grid" id="wishesGrid"></div>
+
   <script>
-    // --- APP STATE ---
-    const STORAGE_KEY = 'NOTION_WISHING_WELL_DATA_V1';
-    let wishes = [];
-    let activeFilter = 'ALL';
-    let selectedCategory = '獎勵';
-    let isTeacherAuthenticated = false;
+    let isTeacher = false;
+    let currentFilter = 'all';
 
-    // Default Mock Data if LocalStorage empty
-    const defaultMockWishes = [
-      {
-        id: 'mock-1',
-        name: '小明',
-        isAnonymous: false,
-        category: '獎勵',
-        content: '希望能增加『免寫一次國語作業券』作為期末進步獎勵！',
-        whisper: '老師，我最近國語進步很多，希望能有這個獎勵！',
-        likes: 12,
-        createdAt: new Date(Date.now() - 86400000 * 2).toISOString(),
-        likedByMe: false
-      },
-      {
-        id: 'mock-2',
-        name: '匿名同學',
-        isAnonymous: true,
-        category: '加分制度',
-        content: '建議課堂上主動舉手回答問題，每次可以為小組加 2 分。',
-        whisper: '',
-        likes: 8,
-        createdAt: new Date(Date.now() - 86400000 * 1).toISOString(),
-        likedByMe: false
-      },
-      {
-        id: 'mock-3',
-        name: '班長',
-        isAnonymous: false,
-        category: '扣分制度',
-        content: '打掃時間如果偷懶玩耍，小組扣 1 分，這樣比較公平！',
-        whisper: '老師，有些同學每次掃地都躲在後面。',
-        likes: 5,
-        createdAt: new Date(Date.now() - 3600000 * 3).toISOString(),
-        likedByMe: false
-      }
-    ];
+    // 初始載入資料
+    document.addEventListener('DOMContentLoaded', renderWishes);
 
-    // --- INITIALIZATION ---
-    window.addEventListener('DOMContentLoaded', () => {
-      loadData();
-      selectCategory('獎勵');
-      renderWishes();
-      updateWhisperBadgeCount();
-      
-      // Auto dark mode detection
-      if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-        document.documentElement.classList.add('dark');
-      }
-    });
-
-    // --- DATA STORAGE FUNCTIONS ---
-    function loadData() {
-      const stored = localStorage.getItem(STORAGE_KEY);
-      if (stored) {
-        try {
-          wishes = JSON.parse(stored);
-        } catch (e) {
-          console.error("Parse error", e);
-          wishes = defaultMockWishes;
-        }
-      } else {
-        wishes = defaultMockWishes;
-        saveData();
-      }
+    function getWishes() {
+      return JSON.parse(localStorage.getItem('class_wishes') || '[]');
     }
 
-    function saveData() {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(wishes));
-      updateWhisperBadgeCount();
+    function saveWishes(wishes) {
+      localStorage.setItem('class_wishes', JSON.stringify(wishes));
     }
 
-    // --- CATEGORY SELECTION ---
-    function selectCategory(cat) {
-      selectedCategory = cat;
-      document.getElementById('wishCategory').value = cat;
-
-      const categories = ['獎勵', '加分制度', '扣分制度'];
-      categories.forEach(c => {
-        const btn = document.getElementById(`catBtn-${c}`);
-        if (!btn) return;
-        if (c === cat) {
-          btn.className = "cat-btn py-2 rounded-xl transition-all text-center font-extrabold bg-white dark:bg-slate-700 text-purple-600 dark:text-purple-300 shadow-sm";
+    function toggleTeacherMode() {
+      if (!isTeacher) {
+        const password = prompt('請輸入老師專區密碼：');
+        if (password === 'teacher') {
+          isTeacher = true;
+          alert('已進入老師管理模式！現在可以刪除願望。');
+          document.querySelector('.teacher-zone-btn').innerText = '🔓 退出老師專區';
         } else {
-          btn.className = "cat-btn py-2 rounded-xl transition-all text-center font-semibold text-slate-500 dark:text-slate-400 hover:bg-white/50";
+          alert('密碼錯誤！');
         }
-      });
-    }
-
-    function toggleAnonymousUI() {
-      const isAnon = document.getElementById('isAnonymous').checked;
-      const nameInput = document.getElementById('studentName');
-      if (isAnon) {
-        nameInput.dataset.oldName = nameInput.value;
-        nameInput.value = '匿名同學';
-        nameInput.disabled = true;
-        nameInput.classList.add('opacity-60', 'bg-slate-100', 'dark:bg-slate-800');
       } else {
-        nameInput.disabled = false;
-        nameInput.value = nameInput.dataset.oldName || '';
-        nameInput.classList.remove('opacity-60', 'bg-slate-100', 'dark:bg-slate-800');
+        isTeacher = false;
+        alert('已退出老師模式');
+        document.querySelector('.teacher-zone-btn').innerText = '🔒 老師專區';
       }
+      renderWishes();
     }
 
-    // --- SUBMIT WISH & COIN ANIMATION ---
-    function handleWishSubmit(e) {
-      e.preventDefault();
+    function addWish() {
+      const category = document.getElementById('category').value;
+      const title = document.getElementById('title').value.trim();
+      const content = document.getElementById('content').value.trim();
+      const isAnonymous = document.getElementById('isAnonymous').checked;
+      const isSecret = document.getElementById('isSecret').checked;
 
-      const category = document.getElementById('wishCategory').value;
-      const isAnon = document.getElementById('isAnonymous').checked;
-      const nameInput = document.getElementById('studentName').value.trim();
-      const content = document.getElementById('wishContent').value.trim();
-      const whisper = document.getElementById('whisperNote').value.trim();
-
-      if (!content) {
-        showToast('請填寫許願內容喔！', 'error');
+      if (!title) {
+        alert('請填寫許願主題！');
         return;
       }
 
-      // Trigger Coin Drop Animation
-      triggerCoinDropAnimation(() => {
-        // Create new wish object
-        const newWish = {
-          id: 'wish-' + Date.now(),
-          name: isAnon ? '匿名同學' : (nameInput || '神秘同學'),
-          isAnonymous: isAnon,
-          category: category,
-          content: content,
-          whisper: whisper,
-          likes: 0,
-          createdAt: new Date().toISOString(),
-          likedByMe: false
-        };
+      const newWish = {
+        id: Date.now(),
+        category,
+        title,
+        content,
+        author: isAnonymous ? '匿名同學' : '同學',
+        isSecret,
+        likes: 0,
+        date: new Date().toLocaleDateString()
+      };
 
-        wishes.unshift(newWish);
-        saveData();
-        renderWishes();
+      const wishes = getWishes();
+      wishes.unshift(newWish);
+      saveWishes(wishes);
 
-        // Reset form
-        document.getElementById('wishForm').reset();
-        selectCategory('獎勵');
-        document.getElementById('studentName').disabled = false;
-        document.getElementById('studentName').classList.remove('opacity-60', 'bg-slate-100', 'dark:bg-slate-800');
+      // 清空表單
+      document.getElementById('title').value = '';
+      document.getElementById('content').value = '';
+      document.getElementById('isAnonymous').checked = false;
+      document.getElementById('isSecret').checked = false;
 
-        showToast('🎉 金幣投入許願池！許願成功！', 'success');
-      });
+      renderWishes();
     }
 
-    // Dynamic Coin Drop Animation Trigger
-    function triggerCoinDropAnimation(callback) {
-      const container = document.getElementById('animatedCoinContainer');
-      
-      // Create animated coin SVG
-      const coin = document.createElement('div');
-      coin.className = 'dropping-coin text-amber-400 text-4xl flex items-center justify-center filter drop-shadow-lg';
-      coin.innerHTML = `<i class="fa-solid fa-coins text-amber-400"></i>`;
-
-      container.appendChild(coin);
-
-      // Play subtle sound using Web Audio API (Synthesized splash)
-      playSplashSound();
-
-      setTimeout(() => {
-        coin.remove();
-        if (callback) callback();
-      }, 1100);
-    }
-
-    // Simple Web Audio API Synthesizer for Coin/Splash Effect
-    function playSplashSound() {
-      try {
-        const ctx = new (window.AudioContext || window.webkitAudioContext)();
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-        
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(800, ctx.currentTime);
-        osc.frequency.exponentialRampToValueAtTime(300, ctx.currentTime + 0.15);
-
-        gain.gain.setValueAtTime(0.3, ctx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.15);
-
-        osc.connect(gain);
-        gain.connect(ctx.destination);
-
-        osc.start();
-        osc.stop(ctx.currentTime + 0.15);
-      } catch (e) {
-        // AudioContext disabled or unsupported
-      }
-    }
-
-    // --- LIKE / VOTE INTERACTION ---
-    function toggleLike(id) {
+    function likeWish(id) {
+      const wishes = getWishes();
       const wish = wishes.find(w => w.id === id);
-      if (!wish) return;
-
-      if (wish.likedByMe) {
-        wish.likes = Math.max(0, wish.likes - 1);
-        wish.likedByMe = false;
-      } else {
+      if (wish) {
         wish.likes += 1;
-        wish.likedByMe = true;
+        saveWishes(wishes);
+        renderWishes();
       }
-
-      saveData();
-      renderWishes();
-    }
-
-    // --- FILTER & SORT ---
-    function setFilter(cat) {
-      activeFilter = cat;
-      const categories = ['ALL', '獎勵', '加分制度', '扣分制度'];
-      categories.forEach(c => {
-        const btn = document.getElementById(`filterBtn-${c}`);
-        if (!btn) return;
-        if (c === cat) {
-          btn.className = "filter-btn px-3 py-1.5 rounded-lg font-bold bg-white dark:bg-slate-700 text-pink-500 dark:text-pink-300 shadow-xs border border-pink-100 dark:border-slate-600";
-        } else {
-          btn.className = "filter-btn px-3 py-1.5 rounded-lg font-semibold text-slate-400 hover:text-slate-600 dark:hover:text-slate-300";
-        }
-      });
-      renderWishes();
-    }
-
-    // --- RENDER PUBLIC WISHES FEED WITH MACARON CARD COLORS ---
-    function renderWishes() {
-      const feed = document.getElementById('wishesFeed');
-      const sortBy = document.getElementById('sortBy').value;
-      const totalCount = document.getElementById('totalWishesCount');
-
-      if (totalCount) totalCount.textContent = wishes.length;
-
-      // Filter
-      let filtered = wishes.filter(w => {
-        if (activeFilter === 'ALL') return true;
-        return w.category === activeFilter;
-      });
-
-      // Sort
-      if (sortBy === 'mostLiked') {
-        filtered.sort((a, b) => b.likes - a.likes);
-      } else {
-        filtered.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-      }
-
-      if (filtered.length === 0) {
-        feed.innerHTML = `
-          <div class="p-8 text-center bg-white/70 dark:bg-slate-800 rounded-3xl border border-dashed border-pink-200 dark:border-slate-700">
-            <i class="fa-solid fa-cookie-bite text-3xl text-pink-300 mb-2"></i>
-            <p class="text-xs text-slate-400">目前還沒有這個分類的馬卡龍許願卡喔！</p>
-          </div>
-        `;
-        return;
-      }
-
-      feed.innerHTML = filtered.map(wish => {
-        const dateStr = formatDate(wish.createdAt);
-        const categoryBadge = getCategoryBadgeHTML(wish.category);
-        const cardBgStyle = getMacaronCardBg(wish.category);
-        
-        return `
-          <div class="${cardBgStyle} rounded-3xl p-4.5 macaron-shadow border border-white/80 dark:border-slate-700/80 hover:scale-[1.01] transition-all flex flex-col gap-2.5 relative">
-            
-            <!-- Card Top Header -->
-            <div class="flex items-center justify-between">
-              <div class="flex items-center gap-2.5">
-                <div class="w-8 h-8 rounded-full bg-white dark:bg-slate-700 flex items-center justify-center text-slate-700 dark:text-slate-200 font-extrabold text-xs shadow-xs border border-pink-100">
-                  ${wish.isAnonymous ? '<i class="fa-solid fa-user-secret text-purple-400 text-xs"></i>' : wish.name.charAt(0)}
-                </div>
-                <div>
-                  <span class="text-xs font-bold text-slate-700 dark:text-slate-200 block leading-tight">
-                    ${escapeHTML(wish.name)}
-                  </span>
-                  <span class="text-[10px] text-slate-400">${dateStr}</span>
-                </div>
-              </div>
-              <div>
-                ${categoryBadge}
-              </div>
-            </div>
-
-            <!-- Card Content Body -->
-            <p class="text-xs text-slate-700 dark:text-slate-200 leading-relaxed break-words whitespace-pre-wrap font-medium">
-              ${escapeHTML(wish.content)}
-            </p>
-
-            <!-- Card Footer: Like Button -->
-            <div class="flex items-center justify-between pt-2 border-t border-slate-200/50 dark:border-slate-700/60 text-xs">
-              <div class="flex items-center gap-1.5 text-[10px] text-slate-400 font-medium">
-                <i class="fa-solid fa-coins text-amber-400"></i>
-                <span>許願卡 #${wish.id.slice(-4)}</span>
-              </div>
-
-              <button onclick="toggleLike('${wish.id}')" 
-                class="flex items-center gap-1.5 px-3 py-1 rounded-full transition-all text-xs shadow-xs ${
-                  wish.likedByMe 
-                    ? 'bg-rose-400 text-white font-bold' 
-                    : 'bg-white/80 dark:bg-slate-700 text-slate-500 hover:text-rose-400'
-                }">
-                <i class="${wish.likedByMe ? 'fa-solid' : 'fa-regular'} fa-heart ${wish.likedByMe ? 'text-white' : 'text-rose-400'}"></i>
-                <span>${wish.likes}</span>
-              </button>
-            </div>
-
-          </div>
-        `;
-      }).join('');
-    }
-
-    // Macaron Card Colors based on Category
-    function getMacaronCardBg(cat) {
-      switch (cat) {
-        case '獎勵':
-          return 'bg-gradient-to-br from-emerald-50/90 to-teal-50/90 dark:from-slate-800 dark:to-slate-800';
-        case '加分制度':
-          return 'bg-gradient-to-br from-blue-50/90 to-sky-50/90 dark:from-slate-800 dark:to-slate-800';
-        case '扣分制度':
-          return 'bg-gradient-to-br from-pink-50/90 to-rose-50/90 dark:from-slate-800 dark:to-slate-800';
-        default:
-          return 'bg-white dark:bg-slate-800';
-      }
-    }
-
-    // Helper: Category Badges in Soft Macaron Tones
-    function getCategoryBadgeHTML(cat) {
-      switch (cat) {
-        case '獎勵':
-          return `<span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200">🎁 獎勵</span>`;
-        case '加分制度':
-          return `<span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-sky-100 dark:bg-sky-950/60 text-sky-700 dark:text-sky-300 border border-sky-200">⭐ 加分</span>`;
-        case '扣分制度':
-          return `<span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-pink-100 dark:bg-pink-950/60 text-pink-700 dark:text-pink-300 border border-pink-200">⚖️ 扣分</span>`;
-        default:
-          return `<span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-600">其他</span>`;
-      }
-    }
-
-    // --- TEACHER MODAL & WHISPER MANAGEMENT ---
-    function openTeacherModal() {
-      document.getElementById('teacherModal').classList.remove('hidden');
-      if (isTeacherAuthenticated) {
-        showTeacherContent();
-      } else {
-        document.getElementById('teacherAuthBox').classList.remove('hidden');
-        document.getElementById('teacherContentBox').classList.add('hidden');
-      }
-    }
-
-    function closeTeacherModal() {
-      document.getElementById('teacherModal').classList.add('hidden');
-    }
-
-    function verifyPasscode() {
-      const input = document.getElementById('passcodeInput').value;
-      const errorMsg = document.getElementById('authErrorMsg');
-
-      // Default Password: "teacher"
-      if (input === 'teacher' || input === '1234') {
-        isTeacherAuthenticated = true;
-        errorMsg.classList.add('hidden');
-        document.getElementById('passcodeInput').value = '';
-        showTeacherContent();
-      } else {
-        errorMsg.classList.remove('hidden');
-      }
-    }
-
-    function lockTeacherMode() {
-      isTeacherAuthenticated = false;
-      document.getElementById('teacherAuthBox').classList.remove('hidden');
-      document.getElementById('teacherContentBox').classList.add('hidden');
-      showToast('已鎖定老師專區', 'info');
-    }
-
-    function showTeacherContent() {
-      document.getElementById('teacherAuthBox').classList.add('hidden');
-      document.getElementById('teacherContentBox').classList.remove('hidden');
-      renderWhisperList();
-    }
-
-    function updateWhisperBadgeCount() {
-      const whispers = wishes.filter(w => w.whisper && w.whisper.trim() !== '');
-      const badge = document.getElementById('whisperBadge');
-      if (badge) {
-        if (whispers.length > 0) {
-          badge.textContent = whispers.length;
-          badge.classList.remove('hidden');
-        } else {
-          badge.classList.add('hidden');
-        }
-      }
-    }
-
-    function renderWhisperList() {
-      const container = document.getElementById('whisperCardsContainer');
-      const whispers = wishes.filter(w => w.whisper && w.whisper.trim() !== '');
-
-      if (whispers.length === 0) {
-        container.innerHTML = `
-          <div class="p-6 text-center text-slate-400 text-xs">
-            <i class="fa-solid fa-comment-slash text-2xl mb-1 block"></i>
-            目前沒有任何悄悄話留言喔！
-          </div>
-        `;
-        return;
-      }
-
-      container.innerHTML = whispers.map(w => `
-        <div class="bg-purple-50 dark:bg-slate-900 p-3.5 rounded-2xl border border-purple-100 dark:border-purple-900 text-xs flex flex-col gap-2 relative">
-          <div class="flex justify-between items-center text-[11px]">
-            <span class="font-bold text-purple-700 dark:text-purple-300 flex items-center gap-1">
-              <i class="fa-solid fa-user-secret text-purple-400"></i>
-              ${escapeHTML(w.name)} ${w.isAnonymous ? '(匿名)' : ''}
-            </span>
-            <span class="text-slate-400">${formatDate(w.createdAt)}</span>
-          </div>
-
-          <!-- Wish Reference -->
-          <div class="bg-white/90 dark:bg-slate-800 p-2 rounded-xl text-slate-600 dark:text-slate-300 border border-purple-100 dark:border-slate-800">
-            <span class="text-[10px] font-bold text-pink-500 block">對應許願：[${w.category}] ${escapeHTML(w.content)}</span>
-          </div>
-
-          <!-- Secret Whisper Message -->
-          <div class="text-slate-700 dark:text-slate-100 font-medium pl-1 border-l-2 border-purple-400">
-            💬 悄悄話：${escapeHTML(w.whisper)}
-          </div>
-
-          <!-- Admin Action Delete button -->
-          <div class="flex justify-end pt-1">
-            <button onclick="deleteWish('${w.id}')" class="text-[10px] text-rose-400 hover:underline flex items-center gap-1">
-              <i class="fa-solid fa-trash-can"></i> 刪除此許願與悄悄話
-            </button>
-          </div>
-        </div>
-      `).join('');
     }
 
     function deleteWish(id) {
-      if (confirm('確定要刪除這筆許願卡與悄悄話嗎？')) {
+      if (!isTeacher) return;
+      if (confirm('確定要刪除這條許願嗎？')) {
+        let wishes = getWishes();
         wishes = wishes.filter(w => w.id !== id);
-        saveData();
+        saveWishes(wishes);
         renderWishes();
-        renderWhisperList();
-        showToast('已成功刪除該筆資料', 'info');
       }
     }
 
-    // --- UTILS ---
-    function toggleDarkMode() {
-      document.documentElement.classList.toggle('dark');
+    function filterWishes(category) {
+      currentFilter = category;
+      document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+      event.target.classList.add('active');
+      renderWishes();
     }
 
-    function formatDate(isoString) {
-      const date = new Date(isoString);
-      const now = new Date();
-      const diffMs = now - date;
-      const diffMins = Math.floor(diffMs / 60000);
-      const diffHours = Math.floor(diffMs / 3600000);
+    function renderWishes() {
+      const wishes = getWishes();
+      const grid = document.getElementById('wishesGrid');
+      grid.innerHTML = '';
 
-      if (diffMins < 1) return '剛剛';
-      if (diffMins < 60) return `${diffMins} 分鐘前`;
-      if (diffHours < 24) return `${diffHours} 小時前`;
-      return `${date.getMonth() + 1}/${date.getDate()} ${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
-    }
+      const filtered = wishes.filter(w => {
+        if (w.isSecret && !isTeacher) return false; // 悄悄話僅老師可見
+        if (currentFilter === 'all') return true;
+        return w.category === currentFilter;
+      });
 
-    function escapeHTML(str) {
-      if (!str) return '';
-      return str.replace(/[&<>"']/g, function(m) {
-        return {
-          '&': '&amp;',
-          '<': '&lt;',
-          '>': '&gt;',
-          '"': '&quot;',
-          "'": '&#039;'
-        }[m];
+      if (filtered.length === 0) {
+        grid.innerHTML = '<p style="grid-column: 1/-1; text-align: center; color: #999; padding: 20px;">目前沒有許願資料喔！</p>';
+        return;
+      }
+
+      filtered.forEach(w => {
+        const card = document.createElement('div');
+        card.className = `wish-card ${w.category}`;
+        
+        let categoryText = '🎁 獎勵';
+        if (w.category === 'bonus') categoryText = '⭐ 加分';
+        if (w.category === 'penalty') categoryText = '⚠️ 扣分';
+
+        card.innerHTML = `
+          <div>
+            <div class="card-header">
+              <span class="tag">${categoryText}</span>
+              ${w.isSecret ? '<span class="secret-badge">🤫 悄悄話</span>' : ''}
+              ${isTeacher ? `<button class="delete-btn" onclick="deleteWish(${w.id})">🗑️ 刪除</button>` : ''}
+            </div>
+            <div class="wish-title">${escapeHtml(w.title)}</div>
+            <div class="wish-content">${escapeHtml(w.content)}</div>
+          </div>
+          <div class="card-footer">
+            <span>${w.author} • ${w.date}</span>
+            <button class="like-btn" onclick="likeWish(${w.id})">
+              ❤️ <span>${w.likes}</span>
+            </button>
+          </div>
+        `;
+        grid.appendChild(card);
       });
     }
 
-    function showToast(message, type = 'info') {
-      const container = document.getElementById('toastContainer');
-      const toast = document.createElement('div');
-      
-      const bgColor = type === 'success' ? 'bg-emerald-600' : type === 'error' ? 'bg-rose-600' : 'bg-slate-800';
-      
-      toast.className = `${bgColor} text-white text-xs px-3.5 py-2 rounded-xl shadow-lg transition-all duration-300 transform translate-y-2 opacity-0 flex items-center gap-2`;
-      toast.innerHTML = `<span>${message}</span>`;
-
-      container.appendChild(toast);
-
-      requestAnimationFrame(() => {
-        toast.classList.remove('translate-y-2', 'opacity-0');
-      });
-
-      setTimeout(() => {
-        toast.classList.add('opacity-0', 'translate-y-2');
-        setTimeout(() => toast.remove(), 300);
-      }, 2500);
+    function escapeHtml(str) {
+      return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
     }
   </script>
 </body>
