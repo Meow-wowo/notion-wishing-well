@@ -42,7 +42,6 @@
   </script>
 
   <style>
-    /* Custom Macaron Scrollbar */
     ::-webkit-scrollbar {
       width: 6px;
       height: 6px;
@@ -59,7 +58,6 @@
       background: #b7e4c7;
     }
 
-    /* Wishing Well Visual Effects */
     .well-container {
       perspective: 1000px;
       background: linear-gradient(135deg, #a2d2ff 0%, #b7e4c7 50%, #ffcad4 100%);
@@ -335,55 +333,17 @@
   <div id="toastContainer" class="fixed bottom-4 right-4 z-50 flex flex-col gap-2 pointer-events-none"></div>
 
   <script>
-    const STORAGE_KEY = 'NOTION_WISHING_WELL_DATA_V1';
+    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxliFxC72-dz3lZ6bv5KMwDSh92z0FVXBrrOE4hZK4BQkGSB3-6N2hCwspZ-4HXtHvd/exec";
+    
     const PASSCODE_KEY = 'TEACHER_PASSCODE_V1';
     let wishes = [];
     let activeFilter = 'ALL';
     let selectedCategory = '獎勵';
     let isTeacherAuthenticated = false;
-    let pendingDeleteId = null; // 用於平滑兩階段點擊刪除，不調用原生 confirm()
-
-    const defaultMockWishes = [
-      {
-        id: 'mock-1',
-        name: '小明',
-        isAnonymous: false,
-        category: '獎勵',
-        content: '希望能增加『免寫一次國語作業券』作為期末進步獎勵！',
-        whisper: '老師，我最近國語進步很多，希望能有這個獎勵！',
-        likes: 12,
-        createdAt: new Date(Date.now() - 86400000 * 2).toISOString(),
-        likedByMe: false
-      },
-      {
-        id: 'mock-2',
-        name: '匿名同學',
-        isAnonymous: true,
-        category: '加分制度',
-        content: '建議課堂上主動舉手回答問題，每次可以為小組加 2 分。',
-        whisper: '',
-        likes: 8,
-        createdAt: new Date(Date.now() - 86400000 * 1).toISOString(),
-        likedByMe: false
-      },
-      {
-        id: 'mock-3',
-        name: '班長',
-        isAnonymous: false,
-        category: '扣分制度',
-        content: '打掃時間如果偷懶玩耍，小組扣 1 分，這樣比較公平！',
-        whisper: '老師，有些同學每次掃地都躲在後面。',
-        likes: 5,
-        createdAt: new Date(Date.now() - 3600000 * 3).toISOString(),
-        likedByMe: false
-      }
-    ];
 
     window.addEventListener('DOMContentLoaded', () => {
       loadData();
       selectCategory('獎勵');
-      renderWishes();
-      updateWhisperBadgeCount();
 
       if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
         document.documentElement.classList.add('dark');
@@ -394,24 +354,18 @@
       document.documentElement.classList.toggle('dark');
     }
 
+    // 讀取 Google Sheets 資料
     function loadData() {
-      const stored = localStorage.getItem(STORAGE_KEY);
-      if (stored) {
-        try {
-          wishes = JSON.parse(stored);
-        } catch (e) {
-          console.error("Parse error", e);
-          wishes = defaultMockWishes;
-        }
-      } else {
-        wishes = defaultMockWishes;
-        saveData();
-      }
-    }
-
-    function saveData() {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(wishes));
-      updateWhisperBadgeCount();
+      fetch(GOOGLE_SCRIPT_URL)
+        .then(res => res.json())
+        .then(data => {
+          wishes = data.reverse(); // 讓最新願望顯示在最上方
+          renderWishes();
+          updateWhisperBadgeCount();
+        })
+        .catch(err => {
+          console.error("無法從 Google Sheets 載入資料", err);
+        });
     }
 
     function selectCategory(cat) {
@@ -469,20 +423,26 @@
           content: content,
           whisper: whisper,
           likes: 0,
-          createdAt: new Date().toISOString(),
-          likedByMe: false
+          createdAt: new Date().toISOString()
         };
 
         wishes.unshift(newWish);
-        saveData();
         renderWishes();
+
+        // 寫入 Google Sheets
+        fetch(GOOGLE_SCRIPT_URL, {
+          method: 'POST',
+          mode: 'no-cors',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'add', wish: newWish })
+        });
 
         document.getElementById('wishForm').reset();
         selectCategory('獎勵');
         document.getElementById('studentName').disabled = false;
         document.getElementById('studentName').classList.remove('opacity-60', 'bg-slate-100', 'dark:bg-slate-800');
 
-        showToast('🎉 金幣投入許願池！許願成功！', 'success');
+        showToast('🎉 金幣投入許願池！已同步儲存至 Google 試算表！', 'success');
       });
     }
 
@@ -531,16 +491,18 @@
       const wish = wishes.find(w => w.id === id);
       if (!wish) return;
 
-      if (wish.likedByMe) {
-        wish.likes = Math.max(0, wish.likes - 1);
-        wish.likedByMe = false;
-      } else {
-        wish.likes += 1;
-        wish.likedByMe = true;
-      }
+      const isLiked = !wish.likedByMe;
+      wish.likedByMe = isLiked;
+      wish.likes = isLiked ? wish.likes + 1 : Math.max(0, wish.likes - 1);
 
-      saveData();
       renderWishes();
+
+      fetch(GOOGLE_SCRIPT_URL, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'like', id: id, liked: isLiked })
+      });
     }
 
     function setFilter(cat) {
@@ -590,7 +552,6 @@
         const dateStr = formatDate(wish.createdAt);
         const categoryBadge = getCategoryBadgeHTML(wish.category);
         const cardBgStyle = getMacaronCardBg(wish.category);
-        const isPending = pendingDeleteId === wish.id;
 
         return `
           <div class="${cardBgStyle} rounded-3xl p-4.5 macaron-shadow border border-white/80 dark:border-slate-700/80 hover:scale-[1.01] transition-all flex flex-col gap-2.5 relative">
@@ -618,17 +579,13 @@
             <div class="flex items-center justify-between pt-2 border-t border-slate-200/50 dark:border-slate-700/60 text-xs">
               <div class="flex items-center gap-1.5 text-[10px] text-slate-400 font-medium">
                 <i class="fa-solid fa-coins text-amber-400"></i>
-                <span>許願卡 #${wish.id.slice(-4)}</span>
+                <span>許願卡 #${String(wish.id).slice(-4)}</span>
               </div>
 
               <div class="flex items-center gap-2">
                 ${isTeacherAuthenticated ? `
-                  <button onclick="handleDeleteClick('${wish.id}')" class="text-[11px] font-bold px-2 py-0.5 rounded-full transition-all ${
-                    isPending 
-                      ? 'bg-rose-500 text-white animate-pulse' 
-                      : 'text-rose-400 hover:text-rose-600 bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800'
-                  }">
-                    <i class="fa-solid fa-trash-can"></i> ${isPending ? '確定刪除？' : '刪除'}
+                  <button onclick="directDeleteWish('${wish.id}')" class="text-[11px] font-bold px-2.5 py-1 rounded-full text-white bg-rose-500 hover:bg-rose-600 transition-all shadow-xs flex items-center gap-1">
+                    <i class="fa-solid fa-trash-can"></i> 刪除
                   </button>
                 ` : ''}
                 <button onclick="toggleLike('${wish.id}')" 
@@ -692,8 +649,12 @@
     }
 
     function getSavedPasscode() {
-      const saved = localStorage.getItem(PASSCODE_KEY);
-      return saved ? saved : 'teacher';
+      try {
+        const saved = localStorage.getItem(PASSCODE_KEY);
+        return saved ? saved : 'teacher';
+      } catch (e) {
+        return 'teacher';
+      }
     }
 
     function verifyPasscode() {
@@ -730,7 +691,9 @@
         return;
       }
 
-      localStorage.setItem(PASSCODE_KEY, newPass);
+      try {
+        localStorage.setItem(PASSCODE_KEY, newPass);
+      } catch (e) {}
       document.getElementById('newPasscodeInput').value = '';
       document.getElementById('confirmPasscodeInput').value = '';
       toggleChangePasscodeUI();
@@ -753,7 +716,7 @@
     }
 
     function updateWhisperBadgeCount() {
-      const whispers = wishes.filter(w => w.whisper && w.whisper.trim() !== '');
+      const whispers = wishes.filter(w => w.whisper && String(w.whisper).trim() !== '');
       const badge = document.getElementById('whisperBadge');
       if (badge) {
         if (whispers.length > 0) {
@@ -765,34 +728,25 @@
       }
     }
 
-    // 兩階段無彈窗安全刪除
-    function handleDeleteClick(id) {
-      if (pendingDeleteId === id) {
-        // 第二次點擊：直接刪除
-        wishes = wishes.filter(w => w.id !== id);
-        pendingDeleteId = null;
-        saveData();
-        renderWishes();
-        renderWhisperList();
-        showToast('已成功刪除該筆許願！', 'info');
-      } else {
-        // 第一次點擊：啟用確認按鈕，3秒後未點擊自動重置
-        pendingDeleteId = id;
-        renderWishes();
-        renderWhisperList();
-        setTimeout(() => {
-          if (pendingDeleteId === id) {
-            pendingDeleteId = null;
-            renderWishes();
-            renderWhisperList();
-          }
-        }, 3000);
-      }
+    // 刪除願望（同時更新 Google Sheets 與畫面）
+    function directDeleteWish(id) {
+      wishes = wishes.filter(w => String(w.id) !== String(id));
+      renderWishes();
+      renderWhisperList();
+
+      fetch(GOOGLE_SCRIPT_URL, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'delete', id: id })
+      });
+
+      showToast('已成功刪除該筆許願！', 'info');
     }
 
     function renderWhisperList() {
       const container = document.getElementById('whisperCardsContainer');
-      const whispers = wishes.filter(w => w.whisper && w.whisper.trim() !== '');
+      const whispers = wishes.filter(w => w.whisper && String(w.whisper).trim() !== '');
 
       if (whispers.length === 0) {
         container.innerHTML = `
@@ -804,40 +758,33 @@
         return;
       }
 
-      container.innerHTML = whispers.map(w => {
-        const isPending = pendingDeleteId === w.id;
-        return `
-          <div class="bg-purple-50 dark:bg-slate-900 p-3.5 rounded-2xl border border-purple-100 dark:border-purple-900 text-xs flex flex-col gap-2 relative">
-            <div class="flex justify-between items-center text-[11px]">
-              <span class="font-bold text-purple-700 dark:text-purple-300 flex items-center gap-1">
-                <i class="fa-solid fa-user-secret text-purple-400"></i>
-                ${escapeHTML(w.name)} ${w.isAnonymous ? '(匿名)' : ''}
-              </span>
-              <span class="text-slate-400">${formatDate(w.createdAt)}</span>
-            </div>
-
-            <div class="bg-white/90 dark:bg-slate-800 p-2 rounded-xl text-slate-600 dark:text-slate-300 border border-purple-100 dark:border-slate-800">
-              <span class="text-[10px] text-purple-400 font-bold block mb-0.5">公開許願內容：</span>
-              ${escapeHTML(w.content)}
-            </div>
-
-            <div class="text-purple-900 dark:text-purple-200 font-medium bg-purple-100/50 dark:bg-purple-900/40 p-2.5 rounded-xl border border-purple-200/60 dark:border-purple-800">
-              <span class="text-[10px] text-purple-500 dark:text-purple-400 font-bold block mb-0.5">🤫 悄悄話：</span>
-              ${escapeHTML(w.whisper)}
-            </div>
-
-            <div class="flex justify-end pt-1">
-              <button onclick="handleDeleteClick('${w.id}')" class="text-[11px] font-bold px-2 py-1 rounded-lg transition-all ${
-                isPending 
-                  ? 'bg-rose-500 text-white animate-pulse' 
-                  : 'text-rose-400 hover:text-rose-600'
-              }">
-                <i class="fa-solid fa-trash-can"></i> ${isPending ? '確定刪除卡片？' : '刪除卡片'}
-              </button>
-            </div>
+      container.innerHTML = whispers.map(w => `
+        <div class="bg-purple-50 dark:bg-slate-900 p-3.5 rounded-2xl border border-purple-100 dark:border-purple-900 text-xs flex flex-col gap-2 relative">
+          <div class="flex justify-between items-center text-[11px]">
+            <span class="font-bold text-purple-700 dark:text-purple-300 flex items-center gap-1">
+              <i class="fa-solid fa-user-secret text-purple-400"></i>
+              ${escapeHTML(w.name)} ${w.isAnonymous ? '(匿名)' : ''}
+            </span>
+            <span class="text-slate-400">${formatDate(w.createdAt)}</span>
           </div>
-        `;
-      }).join('');
+
+          <div class="bg-white/90 dark:bg-slate-800 p-2 rounded-xl text-slate-600 dark:text-slate-300 border border-purple-100 dark:border-slate-800">
+            <span class="text-[10px] text-purple-400 font-bold block mb-0.5">公開許願內容：</span>
+            ${escapeHTML(w.content)}
+          </div>
+
+          <div class="text-purple-900 dark:text-purple-200 font-medium bg-purple-100/50 dark:bg-purple-900/40 p-2.5 rounded-xl border border-purple-200/60 dark:border-purple-800">
+            <span class="text-[10px] text-purple-500 dark:text-purple-400 font-bold block mb-0.5">🤫 悄悄話：</span>
+            ${escapeHTML(w.whisper)}
+          </div>
+
+          <div class="flex justify-end pt-1">
+            <button onclick="directDeleteWish('${w.id}')" class="text-[11px] font-bold px-2.5 py-1 rounded-lg text-white bg-rose-500 hover:bg-rose-600 transition-all">
+              <i class="fa-solid fa-trash-can"></i> 刪除卡片
+            </button>
+          </div>
+        </div>
+      `).join('');
     }
 
     function showToast(message, type = 'info') {
@@ -866,7 +813,7 @@
 
     function escapeHTML(str) {
       if (!str) return '';
-      return str.replace(/[&<>'"]/g, 
+      return String(str).replace(/[&<>'"]/g, 
         tag => ({
           '&': '&amp;',
           '<': '&lt;',
