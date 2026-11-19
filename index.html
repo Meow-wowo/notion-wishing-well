@@ -150,7 +150,7 @@
       <!-- Teacher Admin Button -->
       <button onclick="openTeacherModal()" class="flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold rounded-xl bg-purple-200 hover:bg-purple-300 dark:bg-purple-900 dark:hover:bg-purple-800 text-purple-800 dark:text-purple-200 transition-all shadow-sm">
         <i class="fa-solid fa-user-shield text-xs"></i>
-        <span>老師專區</span>
+        <span id="teacherBtnText">老師專區</span>
         <span id="whisperBadge" class="hidden ml-1 px-1.5 py-0.2 bg-rose-400 text-white rounded-full text-[10px] font-bold">0</span>
       </button>
     </div>
@@ -255,7 +255,10 @@
           <button onclick="setFilter('扣分制度')" id="filterBtn-扣分制度" class="filter-btn px-3 py-1.5 rounded-lg transition-all">⚖️ 扣分</button>
         </div>
 
-        <div class="flex items-center gap-1 text-xs">
+        <div class="flex items-center gap-1.5 text-xs">
+          <button onclick="loadData(true)" class="p-1.5 rounded-xl bg-pink-50/60 dark:bg-slate-900 text-slate-500 hover:text-pink-500 transition-colors" title="重新同步試算表資料">
+            <i class="fa-solid fa-arrows-rotate"></i>
+          </button>
           <select id="sortBy" onchange="renderWishes()" class="bg-pink-50/60 dark:bg-slate-900 border-none rounded-xl px-3 py-1.5 text-xs focus:ring-2 focus:ring-pink-300 font-semibold text-slate-600 dark:text-slate-300">
             <option value="newest">🕒 最新許願</option>
             <option value="mostLiked">❤️ 最高愛心</option>
@@ -267,13 +270,72 @@
     </section>
   </main>
 
+  <!-- TEACHER REPLY & STATUS MODAL -->
+  <div id="replyModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-3 hidden">
+    <div class="bg-white dark:bg-slate-800 rounded-3xl max-w-md w-full p-6 macaron-shadow border border-purple-100 dark:border-slate-700 flex flex-col gap-4">
+      <div class="flex items-center justify-between pb-2 border-b border-purple-100 dark:border-slate-700">
+        <div class="flex items-center gap-2 text-purple-600 dark:text-purple-300 font-extrabold text-sm">
+          <i class="fa-solid fa-comment-dots text-base"></i>
+          <span>教師審核與公開回覆</span>
+        </div>
+        <button onclick="closeReplyModal()" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1">
+          <i class="fa-solid fa-xmark text-base"></i>
+        </button>
+      </div>
+
+      <input type="hidden" id="replyTargetId">
+
+      <!-- Original Wish Preview -->
+      <div class="p-3 rounded-2xl bg-slate-50 dark:bg-slate-900/80 border border-slate-100 dark:border-slate-700 text-xs space-y-1">
+        <div class="font-bold text-slate-500 dark:text-slate-400" id="replyTargetStudent"></div>
+        <p class="text-slate-700 dark:text-slate-200 leading-relaxed" id="replyTargetContent"></p>
+      </div>
+
+      <!-- Status Selection -->
+      <div>
+        <label class="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-1.5">許願審核狀態標記</label>
+        <div class="grid grid-cols-2 gap-2 text-xs font-bold">
+          <button type="button" onclick="selectReplyStatus('審核中')" id="statusOpt-審核中" class="status-opt py-2 px-3 rounded-xl border transition-all text-left flex items-center gap-1.5">
+            ⏳ 審核中
+          </button>
+          <button type="button" onclick="selectReplyStatus('已實現')" id="statusOpt-已實現" class="status-opt py-2 px-3 rounded-xl border transition-all text-left flex items-center gap-1.5">
+            ✨ 已實現
+          </button>
+          <button type="button" onclick="selectReplyStatus('納入考量')" id="statusOpt-納入考量" class="status-opt py-2 px-3 rounded-xl border transition-all text-left flex items-center gap-1.5">
+            🤔 納入考量
+          </button>
+          <button type="button" onclick="selectReplyStatus('不通過')" id="statusOpt-不通過" class="status-opt py-2 px-3 rounded-xl border transition-all text-left flex items-center gap-1.5">
+            ❌ 不通過
+          </button>
+        </div>
+        <input type="hidden" id="replyStatusInput" value="審核中">
+      </div>
+
+      <!-- Reply Textarea -->
+      <div>
+        <label for="teacherReplyInput" class="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-1">給全班 / 該學生的公開回覆</label>
+        <textarea id="teacherReplyInput" rows="3" placeholder="輸入老師的回覆內容（留空則不顯示回覆框）..." 
+          class="w-full text-xs px-3.5 py-2.5 rounded-xl border border-purple-200 dark:border-slate-600 bg-purple-50/30 dark:bg-slate-900 focus:ring-2 focus:ring-purple-300 focus:outline-none transition-all resize-none"></textarea>
+      </div>
+
+      <div class="flex justify-end gap-2 pt-1">
+        <button type="button" onclick="closeReplyModal()" class="px-4 py-2 rounded-xl text-xs font-bold text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors">
+          取消
+        </button>
+        <button type="button" onclick="saveTeacherReply()" class="px-5 py-2 rounded-xl text-xs font-bold bg-purple-500 hover:bg-purple-600 text-white shadow-sm transition-colors flex items-center gap-1.5">
+          <i class="fa-solid fa-check"></i> 儲存並同步
+        </button>
+      </div>
+    </div>
+  </div>
+
   <!-- TEACHER ADMIN MODAL -->
   <div id="teacherModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-3 hidden">
     <div class="bg-white dark:bg-slate-800 rounded-3xl max-w-lg w-full p-6 macaron-shadow border border-pink-100 dark:border-slate-700 flex flex-col max-h-[85vh]">
       <div class="flex items-center justify-between pb-3 border-b border-pink-100 dark:border-slate-700">
         <div class="flex items-center gap-2 text-purple-600 dark:text-purple-300 font-extrabold">
           <i class="fa-solid fa-user-shield text-lg"></i>
-          <span class="text-base">老師專屬悄悄話專區</span>
+          <span class="text-base">老師專屬管理專區</span>
         </div>
         <button onclick="closeTeacherModal()" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1">
           <i class="fa-solid fa-xmark text-lg"></i>
@@ -301,8 +363,13 @@
 
       <!-- Content Box -->
       <div id="teacherContentBox" class="hidden flex-1 flex flex-col pt-3 overflow-hidden">
+        <div class="p-2.5 mb-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-[11px] text-emerald-700 dark:text-emerald-300 flex items-center gap-2">
+          <i class="fa-solid fa-circle-info"></i>
+          <span>已開啟教師權限！關閉此視窗後，可直接點擊許願卡上的「回覆 / 狀態」或「刪除」按鈕。</span>
+        </div>
+
         <div class="flex items-center justify-between text-xs text-slate-400 mb-2">
-          <span>私密留言列表 (僅老師可見)</span>
+          <span>私密悄悄話列表 (僅老師可見)</span>
           <div class="flex items-center gap-3">
             <button onclick="toggleChangePasscodeUI()" class="text-xs text-purple-500 hover:underline flex items-center gap-1 font-bold">
               <i class="fa-solid fa-key"></i> 修改密碼
@@ -342,6 +409,7 @@
     let isTeacherAuthenticated = false;
 
     window.addEventListener('DOMContentLoaded', () => {
+      setFilter('ALL');
       loadData();
       selectCategory('獎勵');
 
@@ -354,17 +422,19 @@
       document.documentElement.classList.toggle('dark');
     }
 
-    // 讀取 Google Sheets 資料
-    function loadData() {
+    function loadData(showNotify = false) {
       fetch(GOOGLE_SCRIPT_URL)
         .then(res => res.json())
         .then(data => {
-          wishes = data.reverse(); // 讓最新願望顯示在最上方
+          wishes = data.reverse();
           renderWishes();
           updateWhisperBadgeCount();
+          if (isTeacherAuthenticated) renderWhisperList();
+          if (showNotify) showToast('✅ 已同步最新試算表資料！', 'success');
         })
         .catch(err => {
           console.error("無法從 Google Sheets 載入資料", err);
+          if (showNotify) showToast('同步失敗，請檢查網路連線', 'error');
         });
     }
 
@@ -423,13 +493,15 @@
           content: content,
           whisper: whisper,
           likes: 0,
-          createdAt: new Date().toISOString()
+          createdAt: new Date().toISOString(),
+          status: '審核中',
+          teacherReply: ''
         };
 
         wishes.unshift(newWish);
         renderWishes();
+        updateWhisperBadgeCount();
 
-        // 寫入 Google Sheets
         fetch(GOOGLE_SCRIPT_URL, {
           method: 'POST',
           mode: 'no-cors',
@@ -488,7 +560,7 @@
     }
 
     function toggleLike(id) {
-      const wish = wishes.find(w => w.id === id);
+      const wish = wishes.find(w => String(w.id) === String(id));
       if (!wish) return;
 
       const isLiked = !wish.likedByMe;
@@ -551,13 +623,15 @@
       feed.innerHTML = filtered.map(wish => {
         const dateStr = formatDate(wish.createdAt);
         const categoryBadge = getCategoryBadgeHTML(wish.category);
+        const statusBadge = getStatusBadgeHTML(wish.status);
         const cardBgStyle = getMacaronCardBg(wish.category);
+        const hasReply = wish.teacherReply && String(wish.teacherReply).trim() !== '';
 
         return `
           <div class="${cardBgStyle} rounded-3xl p-4.5 macaron-shadow border border-white/80 dark:border-slate-700/80 hover:scale-[1.01] transition-all flex flex-col gap-2.5 relative">
-            <div class="flex items-center justify-between">
+            <div class="flex items-start justify-between gap-2">
               <div class="flex items-center gap-2.5">
-                <div class="w-8 h-8 rounded-full bg-white dark:bg-slate-700 flex items-center justify-center text-slate-700 dark:text-slate-200 font-extrabold text-xs shadow-xs border border-pink-100">
+                <div class="w-8 h-8 rounded-full bg-white dark:bg-slate-700 flex items-center justify-center text-slate-700 dark:text-slate-200 font-extrabold text-xs shadow-xs border border-pink-100 shrink-0">
                   ${wish.isAnonymous ? '<i class="fa-solid fa-user-secret text-purple-400 text-xs"></i>' : escapeHTML(wish.name.charAt(0))}
                 </div>
                 <div>
@@ -567,7 +641,8 @@
                   <span class="text-[10px] text-slate-400">${dateStr}</span>
                 </div>
               </div>
-              <div>
+              <div class="flex flex-wrap items-center justify-end gap-1.5">
+                ${statusBadge}
                 ${categoryBadge}
               </div>
             </div>
@@ -576,14 +651,27 @@
               ${escapeHTML(wish.content)}
             </p>
 
+            ${hasReply ? `
+              <div class="mt-0.5 p-3 rounded-2xl bg-white/85 dark:bg-slate-900/80 border border-purple-200/80 dark:border-purple-800/80 text-xs space-y-1 shadow-2xs">
+                <div class="flex items-center gap-1.5 text-[11px] font-extrabold text-purple-600 dark:text-purple-300">
+                  <i class="fa-solid fa-chalkboard-user text-purple-500"></i>
+                  <span>老師回覆：</span>
+                </div>
+                <p class="text-slate-700 dark:text-slate-200 leading-relaxed whitespace-pre-wrap">${escapeHTML(wish.teacherReply)}</p>
+              </div>
+            ` : ''}
+
             <div class="flex items-center justify-between pt-2 border-t border-slate-200/50 dark:border-slate-700/60 text-xs">
               <div class="flex items-center gap-1.5 text-[10px] text-slate-400 font-medium">
                 <i class="fa-solid fa-coins text-amber-400"></i>
                 <span>許願卡 #${String(wish.id).slice(-4)}</span>
               </div>
 
-              <div class="flex items-center gap-2">
+              <div class="flex items-center gap-1.5 flex-wrap justify-end">
                 ${isTeacherAuthenticated ? `
+                  <button onclick="openReplyModal('${wish.id}')" class="text-[11px] font-bold px-2.5 py-1 rounded-full text-purple-700 dark:text-purple-200 bg-purple-100 hover:bg-purple-200 dark:bg-purple-900/70 dark:hover:bg-purple-800 transition-all shadow-xs flex items-center gap-1">
+                    <i class="fa-solid fa-comment-dots"></i> 回覆 / 狀態
+                  </button>
                   <button onclick="directDeleteWish('${wish.id}')" class="text-[11px] font-bold px-2.5 py-1 rounded-full text-white bg-rose-500 hover:bg-rose-600 transition-all shadow-xs flex items-center gap-1">
                     <i class="fa-solid fa-trash-can"></i> 刪除
                   </button>
@@ -602,6 +690,20 @@
           </div>
         `;
       }).join('');
+    }
+
+    function getStatusBadgeHTML(status) {
+      const currentStatus = status || '審核中';
+      switch (currentStatus) {
+        case '已實現':
+          return `<span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-amber-100 dark:bg-amber-900/60 text-amber-700 dark:text-amber-300 border border-amber-300 shadow-2xs">✨ 已實現</span>`;
+        case '納入考量':
+          return `<span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-indigo-100 dark:bg-indigo-900/60 text-indigo-700 dark:text-indigo-300 border border-indigo-200">🤔 納入考量</span>`;
+        case '不通過':
+          return `<span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-rose-100 dark:bg-rose-900/60 text-rose-700 dark:text-rose-300 border border-rose-200">❌ 不通過</span>`;
+        default:
+          return `<span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-white/80 dark:bg-slate-700 text-slate-500 dark:text-slate-300 border border-slate-200 dark:border-slate-600">⏳ 審核中</span>`;
+      }
     }
 
     function getMacaronCardBg(cat) {
@@ -628,6 +730,68 @@
         default:
           return `<span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-600">其他</span>`;
       }
+    }
+
+    // Teacher Reply Modal Controls
+    function openReplyModal(id) {
+      const wish = wishes.find(w => String(w.id) === String(id));
+      if (!wish) return;
+
+      document.getElementById('replyTargetId').value = wish.id;
+      document.getElementById('replyTargetStudent').textContent = `${wish.name} (${wish.category})：`;
+      document.getElementById('replyTargetContent').textContent = wish.content;
+      document.getElementById('teacherReplyInput').value = wish.teacherReply || '';
+      
+      selectReplyStatus(wish.status || '審核中');
+      document.getElementById('replyModal').classList.remove('hidden');
+    }
+
+    function closeReplyModal() {
+      document.getElementById('replyModal').classList.add('hidden');
+    }
+
+    function selectReplyStatus(status) {
+      document.getElementById('replyStatusInput').value = status;
+      const options = ['審核中', '已實現', '納入考量', '不通過'];
+      options.forEach(opt => {
+        const btn = document.getElementById(`statusOpt-${opt}`);
+        if (!btn) return;
+        if (opt === status) {
+          btn.className = "status-opt py-2 px-3 rounded-xl border-2 border-purple-500 bg-purple-100 dark:bg-purple-900/60 text-purple-800 dark:text-purple-200 transition-all text-left flex items-center gap-1.5 shadow-2xs";
+        } else {
+          btn.className = "status-opt py-2 px-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:bg-slate-50 transition-all text-left flex items-center gap-1.5";
+        }
+      });
+    }
+
+    function saveTeacherReply() {
+      const id = document.getElementById('replyTargetId').value;
+      const status = document.getElementById('replyStatusInput').value;
+      const teacherReply = document.getElementById('teacherReplyInput').value.trim();
+
+      const wish = wishes.find(w => String(w.id) === String(id));
+      if (!wish) return;
+
+      wish.status = status;
+      wish.teacherReply = teacherReply;
+
+      renderWishes();
+      if (isTeacherAuthenticated) renderWhisperList();
+      closeReplyModal();
+
+      fetch(GOOGLE_SCRIPT_URL, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'reply',
+          id: id,
+          status: status,
+          teacherReply: teacherReply
+        })
+      });
+
+      showToast('💬 已儲存教師回覆與狀態，並同步至 Google 試算表！', 'success');
     }
 
     function openTeacherModal() {
@@ -666,6 +830,7 @@
         isTeacherAuthenticated = true;
         errorMsg.classList.add('hidden');
         document.getElementById('passcodeInput').value = '';
+        document.getElementById('teacherBtnText').textContent = '老師已登入';
         showTeacherContent();
         renderWishes();
       } else {
@@ -702,6 +867,7 @@
 
     function lockTeacherMode() {
       isTeacherAuthenticated = false;
+      document.getElementById('teacherBtnText').textContent = '老師專區';
       document.getElementById('teacherAuthBox').classList.remove('hidden');
       document.getElementById('teacherContentBox').classList.add('hidden');
       document.getElementById('changePasscodeBox').classList.add('hidden');
@@ -728,11 +894,11 @@
       }
     }
 
-    // 刪除願望（同時更新 Google Sheets 與畫面）
     function directDeleteWish(id) {
       wishes = wishes.filter(w => String(w.id) !== String(id));
       renderWishes();
       renderWhisperList();
+      updateWhisperBadgeCount();
 
       fetch(GOOGLE_SCRIPT_URL, {
         method: 'POST',
@@ -765,7 +931,10 @@
               <i class="fa-solid fa-user-secret text-purple-400"></i>
               ${escapeHTML(w.name)} ${w.isAnonymous ? '(匿名)' : ''}
             </span>
-            <span class="text-slate-400">${formatDate(w.createdAt)}</span>
+            <div class="flex items-center gap-1.5">
+              ${getStatusBadgeHTML(w.status)}
+              <span class="text-slate-400">${formatDate(w.createdAt)}</span>
+            </div>
           </div>
 
           <div class="bg-white/90 dark:bg-slate-800 p-2 rounded-xl text-slate-600 dark:text-slate-300 border border-purple-100 dark:border-slate-800">
@@ -778,7 +947,17 @@
             ${escapeHTML(w.whisper)}
           </div>
 
-          <div class="flex justify-end pt-1">
+          ${w.teacherReply ? `
+            <div class="text-slate-700 dark:text-slate-200 bg-white/80 dark:bg-slate-800/80 p-2 rounded-xl border border-purple-200 dark:border-purple-800">
+              <span class="text-[10px] text-purple-500 font-bold block mb-0.5">👩‍🏫 老師已公開回覆：</span>
+              ${escapeHTML(w.teacherReply)}
+            </div>
+          ` : ''}
+
+          <div class="flex justify-end gap-2 pt-1">
+            <button onclick="closeTeacherModal(); openReplyModal('${w.id}')" class="text-[11px] font-bold px-2.5 py-1 rounded-lg text-purple-700 bg-purple-200 hover:bg-purple-300 transition-all">
+              <i class="fa-solid fa-comment-dots"></i> 回覆 / 狀態
+            </button>
             <button onclick="directDeleteWish('${w.id}')" class="text-[11px] font-bold px-2.5 py-1 rounded-lg text-white bg-rose-500 hover:bg-rose-600 transition-all">
               <i class="fa-solid fa-trash-can"></i> 刪除卡片
             </button>
